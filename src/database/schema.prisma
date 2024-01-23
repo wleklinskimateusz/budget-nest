@@ -1,0 +1,108 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("POSTGRES_PRISMA_URL")
+  directUrl = env("POSTGRES_URL_NON_POOLING")
+}
+
+model Settings {
+  id       String   @id @default(cuid())
+  userId   String   @unique
+  currency Currency
+  language Language
+}
+
+model Budget {
+  id             String           @id @default(cuid())
+  name           String
+  description    String?
+  goal           Float?
+  userId         String           @unique
+  BudgetCategory BudgetCategory[]
+}
+
+model BudgetCategory {
+  id       String             @id @default(cuid())
+  name     String
+  budgetId String
+  type     BudgetCategoryType
+  goal     Float?
+  budget   Budget             @relation(fields: [budgetId], references: [id])
+}
+
+model Portfolio {
+  id                     String                   @id @default(cuid())
+  name                   String
+  description            String?
+  goal                   Float?
+  userId                 String
+  type                   PortfolioType
+  PortfolioStructureItem PortfolioStructureItem[]
+}
+
+model AssetValue {
+  id      String   @id @default(cuid())
+  value   Float
+  assetId String
+  time    DateTime
+  Asset   Asset    @relation(fields: [assetId], references: [id])
+}
+
+model Asset {
+  id                       String                 @id
+  name                     String
+  portfolioStructureItemId String
+  PortfolioStructureItem   PortfolioStructureItem @relation(fields: [portfolioStructureItemId], references: [id])
+  AssetDeposit             AssetDeposit[]
+  AssetValue               AssetValue[]
+}
+
+model AssetDeposit {
+  id      String   @id
+  name    String
+  amount  Float
+  time    DateTime
+  assetId String
+  Asset   Asset    @relation(fields: [assetId], references: [id])
+}
+
+model PortfolioStructureItem {
+  id          String    @id
+  name        String
+  description String?
+  goal        Float
+  portfolioId String
+  Asset       Asset[]
+  Portfolio   Portfolio @relation(fields: [portfolioId], references: [id])
+}
+
+enum Currency {
+  PLN
+  EUR
+  USD
+}
+
+enum Language {
+  PL
+  EN
+}
+
+enum BudgetCategoryType {
+  INCOME
+  NECESSITY
+  SAVINGS
+  WANTS
+  GIFTS
+}
+
+enum PortfolioType {
+  EMERGENCY
+  SAVINGS
+  RETIREMENT
+  RISK
+  WEALTH
+  OTHER
+}

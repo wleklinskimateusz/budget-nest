@@ -1,10 +1,18 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+
+import { ConfigModule } from '@nestjs/config';
+import { ApiModule } from './api/api.module';
+import { SettingsModule } from './modules/settings/settings.module';
 
 @Module({
-  imports: [],
-  controllers: [AppController],
-  providers: [AppService],
+  imports: [
+    ConfigModule.forRoot({
+      envFilePath: ['.env.development.local', '.env.production', '.env'],
+    }),
+    SettingsModule,
+    ApiModule,
+  ],
+  controllers: [],
+  providers: [],
 })
 export class AppModule {}
