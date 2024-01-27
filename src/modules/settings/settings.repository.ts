@@ -13,6 +13,7 @@ export class SettingsRepository {
     orderBy?: Prisma.SettingsOrderByWithRelationInput;
   }): Promise<Settings[]> {
     const { skip, take, cursor, where, orderBy } = params;
+    console.log('secret', process.env.JWT_SECRET);
     return this.prisma.settings.findMany({
       skip,
       take,
