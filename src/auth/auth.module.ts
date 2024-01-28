@@ -5,10 +5,11 @@ import { JwtModule } from '@nestjs/jwt';
 import { AuthController } from './auth.controller';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
-import { JwtAuthGuard } from './auth.guard';
 import { LocalStrategy } from './local.strategy';
 import { PassportModule } from '@nestjs/passport';
 import { AccessTokenStrategy } from './strategies/accessToken.strategy';
+import { RefreshTokenStrategy } from './strategies/refreshStrategy';
+import { AccessTokenGuard } from '../common/guards/accessToken.guard';
 
 @Module({
   imports: [
@@ -29,12 +30,9 @@ import { AccessTokenStrategy } from './strategies/accessToken.strategy';
   ],
   providers: [
     AuthService,
-    {
-      provide: APP_GUARD,
-      useClass: JwtAuthGuard,
-    },
     LocalStrategy,
     AccessTokenStrategy,
+    RefreshTokenStrategy,
   ],
 
   controllers: [AuthController],

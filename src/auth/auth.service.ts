@@ -1,8 +1,13 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { ConfigService } from '@nestjs/config';
+import { JwtPayload } from './strategies/JwtPayload';
 
 @Injectable()
 export class AuthService {
@@ -15,7 +20,7 @@ export class AuthService {
   async signIn(
     username: string,
     password: string,
-  ): Promise<{ access_token: string }> {
+  ): Promise<Record<'refreshToken' | 'accessToken', string>> {
     const user = await this.usersService.findOne(username);
     if (!user) {
       throw new UnauthorizedException("User doesn't exist");
@@ -25,9 +30,13 @@ export class AuthService {
     }
     const tokens = await this.getTokens(user.id, user.username);
     await this.updateRefreshToken(user.id, tokens.refreshToken);
-    const payload = { sub: user.id, username: user.username };
+    const payload = {
+      sub: user.id,
+      username: user.username,
+    };
     return {
-      access_token: await this.jwtService.signAsync(payload),
+      accessToken: await this.jwtService.signAsync(payload),
+      refreshToken: tokens.refreshToken,
     };
   }
 
@@ -40,7 +49,7 @@ export class AuthService {
         },
         {
           secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
-          expiresIn: '15m',
+          expiresIn: '15min',
         },
       ),
       this.jwtService.signAsync(
@@ -70,5 +79,24 @@ export class AuthService {
     await this.usersService.update(userId, {
       hashedRefreshToken,
     });
+  }
+
+  async logout(userId: string) {
+    return this.usersService.update(userId, { hashedRefreshToken: null });
+  }
+
+  async refreshTokens(userId: string, refreshToken: string) {
+    const user = await this.usersService.findById(userId);
+    if (!user || !user.hashedRefreshToken)
+      throw new ForbiddenException('no user or refresh token');
+    const refreshTokenMatches = await bcrypt.compare(
+      refreshToken,
+      user.hashedRefreshToken,
+    );
+    if (!refreshTokenMatches)
+      throw new ForbiddenException('Token doesnt match');
+    const tokens = await this.getTokens(user.id, user.username);
+    await this.updateRefreshToken(user.id, tokens.refreshToken);
+    return tokens;
   }
 }
