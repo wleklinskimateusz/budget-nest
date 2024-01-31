@@ -8,6 +8,13 @@ datasource db {
   directUrl = env("POSTGRES_URL_NON_POOLING")
 }
 
+model User {
+  id                 String  @id @default(cuid())
+  username           String  @unique
+  hashedPassword     String
+  hashedRefreshToken String?
+}
+
 model Settings {
   id       String   @id @default(cuid())
   userId   String   @unique
