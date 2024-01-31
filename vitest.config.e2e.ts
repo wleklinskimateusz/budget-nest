@@ -13,8 +13,8 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@src': './src',
-      '@test': './test',
+      src: './src',
+      test: './test',
     },
   },
   plugins: [
